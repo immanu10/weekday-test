@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { setListings, setLoading } from "../store/jobsSlice";
+import { JobCard } from "./job-card";
+import { Box, CircularProgress, Grid, Typography } from "@mui/material";
 
 async function fetchJobsListings(offset: number = 0) {
   const myHeaders = new Headers();
@@ -32,7 +34,7 @@ async function fetchJobsListings(offset: number = 0) {
 
 export function JobList() {
   const [page, setPage] = useState(0);
-  const { loading, error, listings } = useSelector(
+  const { loading, error, listings, filters } = useSelector(
     (state: RootState) => state.jobs
   );
   const dispatch = useDispatch();
@@ -40,20 +42,21 @@ export function JobList() {
 
   const fetchData = async () => {
     dispatch(setLoading(true));
-
     const data = await fetchJobsListings(page * 10);
-    console.log(data);
-
     dispatch(setListings(data.jdList));
-    setPage((prev) => prev + 1);
     dispatch(setLoading(false));
   };
+
+  useEffect(() => {
+    // handle case when all pages are fetched.
+    fetchData();
+  }, [page]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          fetchData();
+          setPage((prev) => prev + 1);
         }
       },
       { threshold: 1 }
@@ -68,24 +71,54 @@ export function JobList() {
         observer.unobserve(observerTarget.current);
       }
     };
-  }, [observerTarget, page]);
-  console.log({ page });
+  }, [observerTarget]);
+
+  const filteredListings = listings.filter((job) => {
+    const { minExperience, companyName, location, role, minBasePay } = filters;
+    const isWithinSalaryRange =
+      job.minJdSalary !== null &&
+      job.maxJdSalary !== null &&
+      (minBasePay === undefined ||
+        (minBasePay >= job.minJdSalary && minBasePay <= job.maxJdSalary));
+
+    const matchesFilters =
+      job.companyName.toLowerCase().includes(companyName.toLowerCase()) &&
+      job.location.toLowerCase().includes(location.toLowerCase()) &&
+      job.jobRole.toLowerCase().includes(role.toLowerCase());
+
+    const passesExperienceFilter =
+      minExperience === undefined ||
+      (job.minExp !== null && job.minExp <= minExperience);
+    const passesSalaryFilter = minBasePay === null || isWithinSalaryRange;
+
+    return matchesFilters && passesExperienceFilter && passesSalaryFilter;
+  });
+
+  if (error) return <p color="red">Something went wrong!</p>;
 
   return (
-    <div>
-      {listings.map((job) => (
-        <div key={job.jdUid} className="job-card">
-          <h2>{job.jobRole}</h2>
-          <p>Company: {job.companyName}</p>
-          <p>Location: {job.location}</p>
-          <p>Description: {job.jobDetailsFromCompany}</p>
-          <p>Experience Required: {job.maxExp}</p>
-          <button>Apply</button>
-        </div>
-      ))}
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
+    <Box my={4} p={2}>
+      <Grid container spacing={2} justifyContent="center">
+        {filteredListings.map((job) => (
+          <Grid key={job.jdUid} item xs={8} md={4}>
+            <JobCard data={job} />
+          </Grid>
+        ))}
+      </Grid>
+      {loading && (
+        <Box
+          width={"100%"}
+          display={"flex"}
+          alignItems={"center"}
+          justifyContent={"center"}
+          my={4}
+          gap={2}
+        >
+          <CircularProgress size={30} />
+          <Typography variant="overline">Loading more...</Typography>
+        </Box>
+      )}
       <div ref={observerTarget}></div>
-    </div>
+    </Box>
   );
 }

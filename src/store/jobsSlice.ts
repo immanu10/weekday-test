@@ -1,16 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-type JobFilter = {
-  minExperience: number;
+export type JobFilter = {
+  minExperience: number | undefined;
   companyName: string;
   location: string;
-  remote: false;
-  techStack: string;
   role: string;
-  minBasePay: 0;
+  minBasePay: number | undefined;
 };
-type JobItem = {
+
+export type JobItem = {
   jdUid: string;
   companyName: string;
   jdLink: string;
@@ -35,13 +34,11 @@ export interface JobsState {
 const initialState: JobsState = {
   listings: [],
   filters: {
-    minExperience: 0,
+    minExperience: undefined,
     companyName: "",
     location: "",
-    remote: false,
-    techStack: "",
     role: "",
-    minBasePay: 0,
+    minBasePay: undefined,
   },
   loading: false,
   error: null,
@@ -52,9 +49,10 @@ export const jobsSlice = createSlice({
   initialState,
   reducers: {
     setListings: (state, action: PayloadAction<JobItem[]>) => {
-      state.listings = [...state.listings, ...action.payload];
+      let list = new Set([...state.listings, ...action.payload]);
+      state.listings = [...list];
     },
-    setFilters: (state, action) => {
+    setFilters: (state, action: PayloadAction<Partial<JobFilter>>) => {
       state.filters = { ...state.filters, ...action.payload };
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
