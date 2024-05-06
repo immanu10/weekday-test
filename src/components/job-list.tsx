@@ -97,10 +97,10 @@ export function JobList() {
   if (error) return <p color="red">Something went wrong!</p>;
 
   return (
-    <Box my={4} p={2}>
-      <Grid container spacing={2} justifyContent="center">
+    <Box my={4} px={3}>
+      <Grid container spacing={2} justifyContent="center" width="100%">
         {filteredListings.map((job) => (
-          <Grid key={job.jdUid} item xs={8} md={4}>
+          <Grid key={job.jdUid} item xs={12} md={4}>
             <JobCard data={job} />
           </Grid>
         ))}

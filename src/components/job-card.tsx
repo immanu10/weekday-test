@@ -11,7 +11,7 @@ export function JobCard({ data }: { data?: JobItem }) {
   };
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: "16px" }}>
+    <Paper elevation={2} sx={{ borderRadius: "16px", maxWidth: "100%" }}>
       <Box p={2} display="flex" flexDirection="column" gap={2}>
         <Box
           px={1}

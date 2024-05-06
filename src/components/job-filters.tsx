@@ -16,7 +16,7 @@ export function JobFilters() {
 
   return (
     <Box my={2} p={2}>
-      <Grid container spacing={1}>
+      <Grid container spacing={2} justifyContent="center">
         <Grid item>
           <TextField
             label="Company Name"
